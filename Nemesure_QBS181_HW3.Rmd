@@ -1,0 +1,162 @@
+---
+title: "Nemesure_QBS181_HW3"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Question 1
+```{r}
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(dplyr))
+cases = c(1,3,5,7,9,11) #rows with cases
+population = c(2,4,6,8,10,12) #rows with controls
+
+rate = table2$count[cases]/table2$count[population] #divide cases by population
+rate
+
+a_b = inner_join(table4a, table4b, by = 'country') #join tables on country
+
+#add columns with rates for 1999 and 2000
+a_b = a_b %>%
+  mutate(rate1999 = `1999.x`/`1999.y`,
+         rate2000 = `2000.x`/`2000.y`)
+a_b
+
+
+#a
+
+#Number of TB cases
+NumberTbCases = c(
+a_b$`1999.x`[1],
+a_b$`2000.x`[1],
+a_b$`1999.x`[2],
+a_b$`2000.x`[2],
+a_b$`1999.x`[3],
+a_b$`2000.x`[3]
+)
+
+#b
+
+#Population size
+NumberPopulation = c(
+a_b$`1999.y`[1],
+a_b$`2000.y`[1],
+a_b$`1999.y`[2],
+a_b$`2000.y`[2],
+a_b$`1999.y`[3],
+a_b$`2000.y`[3]
+)
+
+#c
+
+#Divide cases by population and multiply by 10000 to get number of cases in 10000 people
+CasesOverPop = (NumberTbCases/NumberPopulation) * 10000
+CasesOverPop
+
+#d
+
+#add column for cases in 10000 people
+table1 = table1 %>%
+  mutate(Cases_in_10000 = CasesOverPop)
+table1
+```
+Question 2
+The code fails because there are no special quotes around the year.
+```{r}
+table4a%>%gather(`1999`,`2000`,key = 'year',value = 'class')
+
+```
+
+
+Question 3
+
+```{r}
+suppressPackageStartupMessages(library(nycflights13))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(lubridate))
+#a
+
+#violin plot showing frequency of each flight by hour over the months - little difference
+flights$month = as.factor(flights$month)
+ggplot(flights, aes(x = month,y = hour)) + geom_violin()
+
+#b
+
+#converting times to find out if delay matches actual calculations
+flights = flights %>%
+  mutate(dep_time_h = dep_time %/% 100, #Get hour of departure time in new column
+         dep_time_m = dep_time %% 100, #Get minute of departure time in new column
+         sched_dep_time_h = sched_dep_time %/% 100, #get hour of schedule departure time in new column
+         sched_dep_time_m = sched_dep_time %% 100, #get minute of schedule departure time in new column
+         dep_time_t = make_datetime(year,month,day,dep_time_h,dep_time_m), #get the date and time of departure
+         sched_dep_time_t = make_datetime(year,month,day,sched_dep_time_h,sched_dep_time_m), #get date time of schedule departure
+         dep_delay_actual = (dep_time_t - sched_dep_time_t)/60, #get difference and convert to minutes
+         dep_delay_difference = dep_delay - dep_delay_actual) #compare actual difference to calculated difference
+
+table(flights$dep_delay_difference) #shows they are not all 0 so there are differences
+
+#not consistent, tend to see differences when day changes
+
+
+#c
+
+#binary for flight left early or not
+flights = flights %>%
+  mutate(left_early = case_when(dep_delay >= 0 ~ 0,
+                                dep_delay < 0 ~ 1)) 
+
+#convert sched departure time into categories
+flights = flights %>%
+  mutate(between_minutes = case_when(minute <= 10 ~ "1-10",
+                                     minute >10 & minute <= 20 ~ "11-20",
+                                     minute >20 & minute <= 30 ~ "21-30",
+                                     minute >30 & minute <= 40 ~ "31-40",
+                                     minute >40 & minute <= 50 ~ "41-50",
+                                     minute >50 & minute <= 60 ~ "51-60"))
+
+counts_total = table(flights$between_minutes) #get total number of flights for each interval
+
+
+#sum early flights for each interval and divide by total flights to get proportion of flights that left early depending on scheduled time of take off
+counts10 = sum(flights[which(flights[,29] == '1-10'), 28], na.rm = T)/as.integer(counts_total[1])
+counts20 = sum(flights[which(flights[,29] == '11-20'), 28], na.rm = T)/as.integer(counts_total[2])
+counts30 = sum(flights[which(flights[,29] == '21-30'), 28], na.rm = T)/as.integer(counts_total[3])
+counts40 = sum(flights[which(flights[,29] == '31-40'), 28], na.rm = T)/as.integer(counts_total[4])
+counts50 = sum(flights[which(flights[,29] == '41-50'), 28], na.rm = T)/as.integer(counts_total[5])
+counts60 = sum(flights[which(flights[,29] == '51-60'), 28], na.rm = T)/as.integer(counts_total[6])
+
+
+#plot these points
+plot(c(10,20,30,40,50,60), c(counts10,counts20,counts30,counts40,counts50, counts60), xaxt = 'n', xlab = 'Minute of sched Departure', ylab = 'proportion of early flights')
+axis(side = 1, at = c(10,20,30,40,50,60), labels = c('0-10','11-20','21-30','31-40','41-50','51-60'))
+
+
+
+
+
+```
+
+
+```{r}
+library(rvest)
+library(stringr)
+library(dplyr)
+library(readr)
+
+QBS_scrape = read_html("https://geiselmed.dartmouth.edu/qbs/")
+
+h1_text = QBS_scrape %>% html_nodes('h1') %>% html_text()
+p_nodes = QBS_scrape %>%html_nodes("p")
+p_text <- QBS_scrape %>% html_nodes("p") %>%html_text()
+p_text[grep("@", p_text)]
+p_text[grep('Phone', p_text)]
+
+```
