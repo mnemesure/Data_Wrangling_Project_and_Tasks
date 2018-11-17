@@ -1,0 +1,205 @@
+---
+title: "Nemesure.Midterm.QBS181"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#bring in data set and write to csv file for uploading onto SQL
+library(SASxport)
+datamidterm = read.xport('DIQ_I.XPT')
+
+
+
+#write.csv(datamidterm, 'datamidterm.csv')
+
+```
+
+
+```{r}
+#check to make sure each column has correct counts compared to website
+tablecheck = function(z){
+  table(datamidterm[,z])
+}
+
+tablecheck(2)
+tablecheck(4)
+tablecheck(5)
+tablecheck(6)
+tablecheck(7)
+tablecheck(8)
+tablecheck(9)
+tablecheck(10)
+
+
+```
+
+
+
+```{r}
+#Create new columns for all original numeric columns without their codes such that calculations can easily be done
+
+datamidterm$actualage = datamidterm$DID040
+datamidterm$actualage[datamidterm$actualage == 666] = 0.5
+datamidterm$actualage[datamidterm$actualage == 999] = NA
+
+datamidterm$recentSBP = datamidterm$DIQ300S
+datamidterm$recentSBP[datamidterm$recentSBP == 7777] = NA
+datamidterm$recentSBP[datamidterm$recentSBP == 9999] = NA
+
+datamidterm$recentDBP = datamidterm$DIQ300D
+datamidterm$recentDBP[datamidterm$recentDBP == 7777] = NA
+datamidterm$recentDBP[datamidterm$recentDBP == 9999] = NA
+
+
+datamidterm$Timesseendoctorpastyear = datamidterm$DID250
+datamidterm$Timesseendoctorpastyear[datamidterm$Timesseendoctorpastyear == 7777] = NA
+datamidterm$Timesseendoctorpastyear[datamidterm$Timesseendoctorpastyear == 9999] = NA
+
+datamidterm$LastA1CLevelnumeric = datamidterm$DIQ280
+datamidterm$LastA1CLevelnumeric[datamidterm$LastA1CLevelnumeric == 777] = NA
+datamidterm$LastA1CLevelnumeric[datamidterm$LastA1CLevelnumeric == 999] = NA
+
+datamidterm$doctorsaysDBP = datamidterm$DID310D
+datamidterm$doctorsaysDBP[datamidterm$doctorsaysDBP == 6666] = NA
+datamidterm$doctorsaysDBP[datamidterm$doctorsaysDBP == 7777] = NA
+datamidterm$doctorsaysDBP[datamidterm$doctorsaysDBP == 9999] = NA
+
+datamidterm$doctorsaysSBP = datamidterm$DID310S
+datamidterm$doctorsaysSBP[datamidterm$doctorsaysSBP == 6666] = NA
+datamidterm$doctorsaysSBP[datamidterm$doctorsaysSBP == 7777] = NA
+datamidterm$doctorsaysSBP[datamidterm$doctorsaysSBP == 9999] = NA
+
+datamidterm$RecentLDLnumeric = datamidterm$DID320
+datamidterm$RecentLDLnumeric[datamidterm$RecentLDLnumeric == 5555] = NA
+datamidterm$RecentLDLnumeric[datamidterm$RecentLDLnumeric == 6666] = NA
+datamidterm$RecentLDLnumeric[datamidterm$RecentLDLnumeric == 7777] = NA
+datamidterm$RecentLDLnumeric[datamidterm$RecentLDLnumeric == 9999] = NA
+
+datamidterm$doctorsaysLDLnumeric = datamidterm$DID330
+datamidterm$doctorsaysLDLnumeric[datamidterm$doctorsaysLDLnumeric == 6666] = NA
+datamidterm$doctorsaysLDLnumeric[datamidterm$doctorsaysLDLnumeric == 7777] = NA
+datamidterm$doctorsaysLDLnumeric[datamidterm$doctorsaysLDLnumeric == 9999] = NA
+
+datamidterm$Drcheckedfeetnumeric = datamidterm$DID341
+datamidterm$Drcheckedfeetnumeric[datamidterm$Drcheckedfeetnumeric == 7777] = NA
+datamidterm$Drcheckedfeetnumeric[datamidterm$Drcheckedfeetnumeric == 9999] = NA
+
+
+
+```
+
+```{r}
+library(dplyr)
+#changing numerical values to actual answers
+datamidterm = datamidterm %>%
+  mutate(DIQ010 = case_when(DIQ010 == 1 ~ 'Yes',
+                            DIQ010 == 2 ~ 'No',
+                            DIQ010 == 3 ~ 'Borderline',
+                            DIQ010 == 7 ~ 'Refused',
+                            DIQ010 == 9 ~ 'Dont Know'))
+
+datamidterm = datamidterm %>%
+  mutate(DIQ160 = case_when(DIQ160 == 1 ~ 'Yes',
+                            DIQ160 == 2 ~ 'No',
+                            DIQ160 == 7 ~ 'Refused',
+                            DIQ160 == 9 ~ 'Dont Know'))
+
+
+
+datamidterm = datamidterm %>%
+  mutate(DIQ172 = case_when(DIQ172 == 1 ~ 'Yes',
+                            DIQ172 == 2 ~ 'No',
+                            DIQ172 == 7 ~ 'Refused',
+                            DIQ172 == 9 ~ 'Dont Know'))
+
+datamidterm = datamidterm %>%
+  mutate(DIQ170 = case_when(DIQ170 == 1 ~ 'Yes',
+                            DIQ170 == 2 ~ 'No',
+                            DIQ170 == 7 ~ 'Refused',
+                            DIQ170 == 9 ~ 'Dont Know'))
+
+datamidterm = datamidterm %>%
+  mutate(DIQ180 = case_when(DIQ180 == 1 ~ 'Yes',
+                            DIQ180 == 2 ~ 'No',
+                            DIQ180 == 7 ~ 'Refused',
+                            DIQ180 == 9 ~ 'Dont Know'))
+
+datamidterm = datamidterm %>%
+  mutate(DIQ050 = case_when(DIQ050 == 1 ~ 'Yes',
+                            DIQ050 == 2 ~ 'No',
+                            DIQ050 == 7 ~ 'Refused',
+                            DIQ050 == 9 ~ 'Dont Know'))
+
+datamidterm = datamidterm %>%
+  mutate(DIQ070 = case_when(DIQ070 == 1 ~ 'Yes',
+                            DIQ070 == 2 ~ 'No',
+                            DIQ070 == 7 ~ 'Refused',
+                            DIQ070 == 9 ~ 'Dont Know'))
+
+datamidterm = datamidterm %>%
+  mutate(DIQ240 = case_when(DIQ240 == 1 ~ 'Yes',
+                            DIQ240 == 2 ~ 'No',
+                            DIQ240 == 7 ~ 'Refused',
+                            DIQ240 == 9 ~ 'Dont Know'))
+
+datamidterm = datamidterm %>%
+  mutate(DIQ275 = case_when(DIQ275 == 1 ~ 'Yes',
+                            DIQ275 == 2 ~ 'No',
+                            DIQ275 == 7 ~ 'Refused',
+                            DIQ275 == 9 ~ 'Dont Know'))
+
+datamidterm = datamidterm %>%
+  mutate(DIQ080 = case_when(DIQ080 == 1 ~ 'Yes',
+                            DIQ080 == 2 ~ 'No',
+                            DIQ080 == 7 ~ 'Refused',
+                            DIQ080 == 9 ~ 'Dont Know'))
+
+```
+
+
+```{r}
+#changing dates to all months
+
+datamidterm = datamidterm %>%
+  mutate(DID060 = case_when(DIQ060U == 2 ~ as.numeric(DID060) * 12,
+                            DIQ060U == 1 ~ as.numeric(DID060)))
+
+datamidterm$DIQ060U = NULL
+
+#changing rate to all per day
+
+datamidterm = datamidterm %>%
+  mutate(DID260 = case_when(DIQ260U == 2 ~ as.numeric(DID350)/7,
+                            DIQ260U == 3 ~ as.numeric(DID350)/30,
+                            DIQ260U == 4 ~ as.numeric(DID350)/365,
+                            DIQ260U == 1 ~ as.numeric(DID350)))
+datamidterm$DIQ260U = NULL
+
+datamidterm = datamidterm %>%
+  mutate(DID350 = case_when(DIQ350U == 2 ~ as.numeric(DID350)/7,
+                            DIQ350U == 3 ~ as.numeric(DID350)/30,
+                            DIQ350U == 4 ~ as.numeric(DID350)/365,
+                            DIQ350U == 1 ~ as.numeric(DID350)))
+datamidterm$DIQ350U = NULL
+
+```
+
+
+```{r}
+#updating column names at the end
+
+z = c('SeqNum','DoctorToldDiabetes', 'AgeToldDiabetes', 'EverToldPreDiabetes', 'EverToldHealthRiskDiabetes', 'FeltAtRiskDiabetes', 'FamilyHistory', 'Overweight', 'Age', 'PoorDiet', 'Race', 'HadBabyOver9lbs','LackofPhysActivity', 'HighBP', 'HighBS', 'HighChol', 'Hypoglycemic', 'ExtremeHunger', 'TinglingHandsorFeet', 'BlurredVision', 'Fatigue', 'AnyoneatRisk', 'DoctorWarning', 'Other', 'GestationalDiabetes', 'FrequentUrination', 'Thirst', 'CravingSugar', 'Medication', 'PolycysticOvarianSyndrome', 'BloodTestPast3Years', 'TakingInsulinNow', 'HowLongTakingInsulinMonths', 'TakeDiabeticPill', 'HowLongSinceSpecialist', 'OneDr', 'HowManyTimesSeenDr', 'HowOftenCheckBloodSugarPerDay', 'PastYearCheckedA1C', 'LastA1Clevel', 'WhatA1Cshouldbe', 'RecentSBP', 'RecentDBP', 'SBPShouldBe', 'DBPShouldBe', 'RecentLDL', 'LDLShouldBe', 'TimesFeetCheckLastYear', 'YouCheckFeetPerDay', 'LastTimePupilsDilated', 'DiabetesAffectedEyes','ActualAge','RecentSBPnumeric','RecentDBPnumeric', 'TimesseenDoctorlastyear','LastA1ClevelNumeric','DoctorsaysDBPShouldbenumeric','doctorsaysSBPshouldbenumeric', 'RecentLDLNumeric', 'doctorsaysldlnumeric', 'drcheckedfeetnumeric')
+
+
+
+colnames(datamidterm) = z
+
+
+
+```
