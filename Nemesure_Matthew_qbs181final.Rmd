@@ -1,0 +1,36 @@
+---
+title: "Nemesure.Matt.qbs181.final"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+suppressPackageStartupMessages(library(RODBC))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyr))
+
+#open sql channel
+ch = odbcDriverConnect('driver={SQL Server};server=qbs181-db.dartmouth.edu\\qbs181,40062;database=qbs181;uid=mnemesure;pwd=mnemesure@qbs181')
+
+#pull in required tables to R
+demographics = sqlFetch(ch, "demographics")
+Chronicconditions = sqlFetch(ch, 'ChronicConditions')
+textmessages = sqlFetch(ch, 'Text')
+
+#merge the 3 tables into one big table TDC
+DC = demographics %>% inner_join(Chronicconditions, by = c('contactid' = 'tri_patientid'))
+TDC = DC %>% inner_join(textmessages, by = c('contactid'='tri_contactId'))
+
+#create table with unique ids based on last text sent date
+TDClasttext = TDC %>%
+  group_by(contactid) %>% top_n(1, TextSentDate)
+
+#print rows 1-10
+print(TDClasttext[1:10,c(1,7,16,18)])
+
+```
